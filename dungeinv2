@@ -41,7 +41,11 @@ ToggleButton.MouseButton1Click:Connect(function()
     saveState(enabled)
     ToggleButton.Text = enabled and "Auto Dungeon: ON" or "Auto Dungeon: OFF"
     
+    -- Thêm delay nhỏ để đảm bảo trạng thái đã được lưu lại trước khi tiếp tục
+    wait(1)
+
     if enabled then
+        -- Chạy script tự động khi tính năng bật
         loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
     end
 end)
