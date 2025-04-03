@@ -44,8 +44,15 @@ ToggleButton.MouseButton1Click:Connect(function()
     -- Thêm delay nhỏ để đảm bảo trạng thái đã được lưu lại trước khi tiếp tục
     wait(1)
 
+    -- Chạy lại script nếu tính năng bật
     if enabled then
         -- Chạy script tự động khi tính năng bật
         loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
     end
 end)
+
+-- Chạy ngay script nếu trạng thái là "ON" khi khởi động
+if enabled then
+    wait(1)  -- Thêm chút thời gian chờ để đảm bảo mọi thứ đã sẵn sàng
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
+end
