@@ -1,96 +1,12 @@
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart")
-local enemies = workspace.__Main.__Enemies.Server
-local speed, tween = 500, nil
+--[[
+ .____                  ________ ___.    _____                           __                
+ |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
+ |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
+ |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
+ |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
+         \/          \/         \/    \/                \/     \/     \/                   
+          \_Welcome to LuaObfuscator.com   (Alpha 0.10.8) ~  Much Love, Ferib 
 
--- Tìm mob gần nhất còn sống
-local function findNearestMob()
-    local nearest, minDist = nil, math.huge
-    for _, mob in pairs(enemies:GetChildren()) do
-        local hp = mob:GetAttribute("HP")
-        if hp and hp > 0 then
-            local dist = (mob.Position - rootPart.Position).Magnitude
-            if dist < minDist then
-                minDist, nearest = dist, mob
-            end
-        end
-    end
-    return nearest
-end
+]]--
 
--- Gửi remote Punch
-local function punchMob(uuid)
-    local args = {
-        [1] = {
-            [1] = {
-                ["Event"] = "PunchAttack",
-                ["Enemy"] = uuid
-            },
-            [2] = "\4"
-        }
-    }
-    ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
-end
-
--- Gửi remote EnemyDestroy 3 lần
-local function destroyMob(uuid)
-    for i = 1, 3 do
-        local args = {
-            [1] = {
-                [1] = {
-                    ["Event"] = "EnemyDestroy",
-                    ["Enemy"] = uuid
-                },
-                [2] = "\4"
-            }
-        }
-        ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
-        task.wait(0.2)
-    end
-end
-
--- Tween tới mob và tấn công
-local function moveToAndPunch(mob)
-    if tween then tween:Cancel() end
-
-    local distance = (mob.Position - rootPart.Position).Magnitude
-    local tweenTime = distance / speed
-    tween = TweenService:Create(rootPart, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = mob.CFrame})
-    tween:Play()
-    tween.Completed:Wait()
-
-    if not mob or not mob.Parent then return end
-    local uuid = mob:GetAttribute("UUID") or mob.Name
-
-    -- Bắt đầu Punch cho đến khi HP <= 0
-local RunService = game:GetService("RunService")
-
--- Theo dõi mob mỗi frame
-local connection
-connection = RunService.Heartbeat:Connect(function()
-    if not mob or not mob.Parent then
-        connection:Disconnect()
-        return
-    end
-
-    local hp = mob:GetAttribute("HP")
-    if not hp or hp <= 0 then
-        connection:Disconnect()
-        destroyMob(uuid)
-        return
-    end
-
-    punchMob(uuid)
-end)
-end
-
--- Vòng lặp chính
-while task.wait(0.2) do
-    local mob = findNearestMob()
-    if mob then
-        moveToAndPunch(mob)
-    end
-end
+local v0=Instance.new("ScreenGui");v0.Parent=game.CoreGui;local v3=Instance.new("Frame");v3.Size=UDim2.new(0 -0 ,100,0 -0 ,50);v3.Position=UDim2.new(0.5, -(1115 -(68 + 997)),1270.5 -(226 + 1044) , -(108 -83));v3.BackgroundColor3=Color3.fromRGB(167 -(32 + 85) ,50,50 + 0 );v3.BorderSizePixel=2;v3.Draggable=true;v3.Active=true;v3.Parent=v0;local v11=Instance.new("TextButton");v11.Size=UDim2.new(0 + 0 ,90,957 -(892 + 65) ,25);v11.Position=UDim2.new(0 -0 ,9 -4 ,0 -0 ,362 -(87 + 263) );v11.Text="Loading...";v11.BackgroundColor3=Color3.fromRGB(280 -(67 + 113) ,74 + 26 ,245 -145 );v11.Parent=v3;local v17="autodungeon_toggle.txt";local v18=false;if pcall(function() readfile(v17);end) then v18=readfile(v17)=="true" ;end local function v19(v20) writefile(v17,tostring(v20));end v11.Text=(v18 and "Auto Dungeon: ON") or "Auto Dungeon: OFF" ;v11.MouseButton1Click:Connect(function() local v21=0;while true do if (v21==(2 + 0)) then if v18 then task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon"))();end);task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/automob"))();end);end break;end if (v21==(0 -0)) then v18= not v18;v19(v18);v21=1;end if (v21==(953 -(802 + 150))) then v11.Text=(v18 and "Auto Dungeon: ON") or "Auto Dungeon: OFF" ;wait(1);v21=5 -3 ;end end end);if v18 then wait(1 -0 );task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon"))();end);task.spawn(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/automob"))();end);end
