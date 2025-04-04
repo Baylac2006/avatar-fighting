@@ -1,89 +1,96 @@
-while true do
-    -- Kiểm tra PlaceId
-    if game.PlaceId == 87039211657390 then
-        -- Nếu là PlaceId này, chờ 5 giây rồi chạy các hành động sau
-        print("PlaceId khớp, đợi thêm 5 giây...")
-        wait(5)
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local enemies = workspace.__Main.__Enemies.Server
+local speed, tween = 500, nil
 
-        -- Mua vé vào dungeon
-        local args1 = {
-            [1] = {
-                [1] = {["Type"] = "Gems", ["Event"] = "DungeonAction", ["Action"] = "BuyTicket"},
-                [2] = "\n"
-            }
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args1))
-
-        wait(1)
-
-        -- Tạo dungeon
-        local args2 = {
-            [1] = {
-                [1] = {["Event"] = "DungeonAction", ["Action"] = "Create"},
-                [2] = "\n"
-            }
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args2))
-
-        wait(1)
-
-        -- Bắt đầu dungeon
-        local args3 = {
-            [1] = {
-                [1] = {["Dungeon"] = 876403839, ["Event"] = "DungeonAction", ["Action"] = "Start"},
-                [2] = "\n"
-            }
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args3))
-
-        print("Dungeon mới đã bắt đầu!")
-    else
-        -- Nếu không phải PlaceId 87039211657390, chạy script Dungeon thông thường
-        -- Khai báo đường dẫn đến GUI DungeonInfo
-        local dungeonInfo = game.Players.LocalPlayer.PlayerGui.Hud.UpContanier.DungeonInfo
-
-        -- Hàm kiểm tra khi Dungeon sắp kết thúc
-        local function isDungeonEnding()
-            return string.match(dungeonInfo.Text, "^Dungeon Ends in %d+s$") ~= nil
+-- Tìm mob gần nhất còn sống
+local function findNearestMob()
+    local nearest, minDist = nil, math.huge
+    for _, mob in pairs(enemies:GetChildren()) do
+        local hp = mob:GetAttribute("HP")
+        if hp and hp > 0 then
+            local dist = (mob.Position - rootPart.Position).Magnitude
+            if dist < minDist then
+                minDist, nearest = dist, mob
+            end
         end
+    end
+    return nearest
+end
 
-        -- Chờ đến khi dungeon sắp kết thúc
-        repeat wait(1) until isDungeonEnding()
-
-        print("Dungeon sắp kết thúc, đợi 3 giây...")
-        wait(3)
-
-        -- Mua vé vào dungeon
-        local args1 = {
+-- Gửi remote Punch
+local function punchMob(uuid)
+    local args = {
+        [1] = {
             [1] = {
-                [1] = {["Type"] = "Gems", ["Event"] = "DungeonAction", ["Action"] = "BuyTicket"},
-                [2] = "\n"
+                ["Event"] = "PunchAttack",
+                ["Enemy"] = uuid
+            },
+            [2] = "\4"
+        }
+    }
+    ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
+end
+
+-- Gửi remote EnemyDestroy 3 lần
+local function destroyMob(uuid)
+    for i = 1, 3 do
+        local args = {
+            [1] = {
+                [1] = {
+                    ["Event"] = "EnemyDestroy",
+                    ["Enemy"] = uuid
+                },
+                [2] = "\4"
             }
         }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args1))
+        ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
+        task.wait(0.2)
+    end
+end
 
-        wait(1)
+-- Tween tới mob và tấn công
+local function moveToAndPunch(mob)
+    if tween then tween:Cancel() end
 
-        -- Tạo dungeon
-        local args2 = {
-            [1] = {
-                [1] = {["Event"] = "DungeonAction", ["Action"] = "Create"},
-                [2] = "\n"
-            }
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args2))
+    local distance = (mob.Position - rootPart.Position).Magnitude
+    local tweenTime = distance / speed
+    tween = TweenService:Create(rootPart, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = mob.CFrame})
+    tween:Play()
+    tween.Completed:Wait()
 
-        wait(1)
+    if not mob or not mob.Parent then return end
+    local uuid = mob:GetAttribute("UUID") or mob.Name
 
-        -- Bắt đầu dungeon
-        local args3 = {
-            [1] = {
-                [1] = {["Dungeon"] = 876403839, ["Event"] = "DungeonAction", ["Action"] = "Start"},
-                [2] = "\n"
-            }
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args3))
+    -- Bắt đầu Punch cho đến khi HP <= 0
+local RunService = game:GetService("RunService")
 
-        print("Dungeon mới đã bắt đầu!")
+-- Theo dõi mob mỗi frame
+local connection
+connection = RunService.Heartbeat:Connect(function()
+    if not mob or not mob.Parent then
+        connection:Disconnect()
+        return
+    end
+
+    local hp = mob:GetAttribute("HP")
+    if not hp or hp <= 0 then
+        connection:Disconnect()
+        destroyMob(uuid)
+        return
+    end
+
+    punchMob(uuid)
+end)
+end
+
+-- Vòng lặp chính
+while task.wait(0.2) do
+    local mob = findNearestMob()
+    if mob then
+        moveToAndPunch(mob)
     end
 end
