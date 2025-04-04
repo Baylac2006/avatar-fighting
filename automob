@@ -1,10 +1,16 @@
 local TweenService = game:GetService("TweenService")
-local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
 local enemies = workspace.__Main.__Enemies.Server
+
 local speed, tween = 1000, nil
 
+-- 🔍 Tìm mob gần nhất còn sống
 local function findNearestMob()
     local nearest, minDist = nil, math.huge
     for _, mob in pairs(enemies:GetChildren()) do
@@ -19,24 +25,74 @@ local function findNearestMob()
     return nearest
 end
 
--- 🚀 Tween tới quái
-local function moveToMob(mob)
-    if tween then tween:Cancel() end
-    local info = TweenInfo.new((mob.Position - rootPart.Position).Magnitude / speed, Enum.EasingStyle.Linear)
-    tween = TweenService:Create(rootPart, info, {CFrame = mob.CFrame})
-    tween:Play()
+-- 👊 Gửi remote PunchAttack
+local function punchMob(uuid)
+    local args = {
+        [1] = {
+            [1] = {
+                ["Event"] = "PunchAttack",
+                ["Enemy"] = uuid
+            },
+            [2] = "\4"
+        }
+    }
+    ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
+end
 
-    -- Kiểm tra quái còn sống khi đang Tween
-    while task.wait(0.2) do
-        if not mob.Parent or mob:GetAttribute("HP") <= 0 then
-            tween:Cancel()
-            return
-        end
+-- 💥 Gửi remote EnemyDestroy 6 lần (delay 0.1s)
+local function destroyMob(uuid)
+    for i = 1, 10 do
+        local args = {
+            [1] = {
+                [1] = {
+                    ["Event"] = "EnemyDestroy",
+                    ["Enemy"] = uuid
+                },
+                [2] = "\4"
+            }
+        }
+        ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
+        task.wait(0.1)
     end
 end
 
--- 🔁 Auto bay liên tục
-while true do
-    local target = findNearestMob()
-    if target then moveToMob(target) else wait(1) end
+-- ✈️ Bay tới mob và bắt đầu Punch
+local function moveToAndPunch(mob)
+    if tween then tween:Cancel() end
+
+    local uuid = mob:GetAttribute("UUID") or mob.Name
+    local distance = (mob.Position - rootPart.Position).Magnitude
+    local tweenTime = distance / speed
+
+    -- Bắt đầu tween bay đến mob
+    tween = TweenService:Create(rootPart, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = mob.CFrame})
+    tween:Play()
+
+    -- Bắt đầu punch khi bay (không chờ tween xong)
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not mob or not mob.Parent then
+            connection:Disconnect()
+            return
+        end
+
+        local hp = mob:GetAttribute("HP")
+        if not hp or hp <= 0 then
+            connection:Disconnect()
+
+            destroyMob(uuid)
+
+            return
+        end
+
+        punchMob(uuid)
+    end)
+end
+
+-- 🔁 Vòng lặp chính
+while task.wait(0.2) do
+    local mob = findNearestMob()
+    if mob then
+        moveToAndPunch(mob)
+    end
 end
