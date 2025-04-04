@@ -52,7 +52,7 @@ local function destroyMob(uuid)
             }
         }
         ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
-        task.wait(0.1)
+        task.wait(0.3)
     end
 end
 
@@ -90,7 +90,7 @@ local function moveToAndPunch(mob)
 end
 
 -- 🔁 Vòng lặp chính
-while task.wait(0.2) do
+while task.wait(0.3) do
     local mob = findNearestMob()
     if mob then
         moveToAndPunch(mob)
