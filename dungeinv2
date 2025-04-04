@@ -41,18 +41,28 @@ ToggleButton.MouseButton1Click:Connect(function()
     saveState(enabled)
     ToggleButton.Text = enabled and "Auto Dungeon: ON" or "Auto Dungeon: OFF"
     
-    -- Thêm delay nhỏ để đảm bảo trạng thái đã được lưu lại trước khi tiếp tục
     wait(1)
 
-    -- Chạy lại script nếu tính năng bật
     if enabled then
-        -- Chạy script tự động khi tính năng bật
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
+        -- 🔁 Chạy 2 tính năng song song khi bật
+        task.spawn(function()
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
+        end)
+
+        task.spawn(function()
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/automob'))()
+        end)
     end
 end)
 
--- Chạy ngay script nếu trạng thái là "ON" khi khởi động
+-- 🚀 Tự chạy nếu ON khi khởi động
 if enabled then
-    wait(1)  -- Thêm chút thời gian chờ để đảm bảo mọi thứ đã sẵn sàng
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
+    wait(1)
+    task.spawn(function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/autodungeon'))()
+    end)
+
+    task.spawn(function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/Baylac2006/avatar-fighting/refs/heads/main/automob'))()
+    end)
 end
