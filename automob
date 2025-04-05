@@ -8,7 +8,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
 local enemies = workspace.__Main.__Enemies.Server
 
-local speed, tween = 250, nil
+local speed, tween = 300, nil
 
 -- 🔍 Tìm mob gần nhất còn sống
 local function findNearestMob()
