@@ -10,7 +10,6 @@ local enemies = workspace.__Main.__Enemies.Server
 
 local speed, tween = 300, nil
 
--- 🔍 Tìm mob gần nhất còn sống
 local function findNearestMob()
     local nearest, minDist = nil, math.huge
     for _, mob in pairs(enemies:GetChildren()) do
@@ -25,7 +24,6 @@ local function findNearestMob()
     return nearest
 end
 
--- 👊 Gửi remote PunchAttack
 local function punchMob(uuid)
     local args = {
         [1] = {
@@ -39,7 +37,6 @@ local function punchMob(uuid)
     ReplicatedStorage.BridgeNet2.dataRemoteEvent:FireServer(unpack(args))
 end
 
--- 💥 Gửi remote EnemyDestroy 6 lần (delay 0.1s)
 local function destroyMob(uuid)
     for i = 1, 10 do
         local args = {
@@ -56,7 +53,6 @@ local function destroyMob(uuid)
     end
 end
 
--- ✈️ Bay tới mob và bắt đầu Punch
 local function moveToAndPunch(mob)
     if tween then tween:Cancel() end
 
@@ -89,7 +85,7 @@ local function moveToAndPunch(mob)
     end)
 end
 
--- 🔁 Vòng lặp chính
+-- Vòng lặp chính
 while task.wait(0.3) do
     local mob = findNearestMob()
     if mob then
