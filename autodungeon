@@ -3,7 +3,7 @@ while true do
     if game.PlaceId == 87039211657390 then
         -- Nếu là PlaceId này, chờ 5 giây rồi chạy các hành động sau
         print("PlaceId khớp, đợi thêm 5 giây...")
-        wait(5)
+        wait(3)
 
         -- Mua vé vào dungeon
         local args1 = {
